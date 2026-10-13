@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Day 27 - CSS Container Queries</title>
+    <style>
+        .container { container-type: inline-size; width: 100%; max-width: 600px; border: 2px dashed #007bff; padding: 20px; resize: horizontal; overflow: auto; }
+        .card { background: #f1f3f5; padding: 15px; border-radius: 5px; }
+        
+        /* Container Query */
+        @container (min-width: 400px) {
+            .card { background: #d4edda; display: flex; justify-content: space-between; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <p>Resize container horizontally to test query:</p>
+    <div class="container">
+        <div class="card">
+            <h3>Sanctify Component</h3>
+            <p>Adapts based on parent size!</p>
+        </div>
+    </div>
+</body>
+</html>
