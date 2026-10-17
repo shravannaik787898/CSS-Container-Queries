@@ -1,25 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Day 27 - CSS Container Queries</title>
-    <style>
-        .container { container-type: inline-size; width: 100%; max-width: 600px; border: 2px dashed #007bff; padding: 20px; resize: horizontal; overflow: auto; }
-        .card { background: #f1f3f5; padding: 15px; border-radius: 5px; }
-        
-        /* Container Query */
-        @container (min-width: 400px) {
-            .card { background: #d4edda; display: flex; justify-content: space-between; align-items: center; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Container Queries - Interactive Playground</title>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-main: #0a0d14;
+      --bg-card: #121824;
+      --bg-subtle: #1a2234;
+      --accent-neon: #00f2fe;
+      --accent-purple: #7928ca;
+      --accent-pink: #ff0080;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #2a364f;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .wrapper {
+      max-width: 1200px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    /* Header Styling */
+    header {
+      background: linear-gradient(135deg, rgba(25, 30, 48, 0.6), rgba(15, 20, 32, 0.8));
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(0, 242, 254, 0.1);
+      color: var(--accent-neon);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #ffffff, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .hero-cq-badge {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+      width: 80px;
+      height: 80px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.75rem;
+      box-shadow: 0 10px 25px rgba(121, 40, 202, 0.4);
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      border-radius: 14px;
+      gap: 1rem;
+    }
+
+    .preset-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background-color: var(--bg-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover, .btn.active {
+      background-color: var(--accent-neon);
+      color: #000;
+      border-color: var(--accent-neon);
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-grow: 1;
+      max-width: 400px;
+    }
+
+    .slider-container span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-neon);
+      cursor: pointer;
+    }
+
+    /* Container Queries Setup */
+    .playground-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    /* 1. Define Container Context */
+    .resizable-wrapper {
+      container-type: inline-size;
+      container-name: product-container;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      position: relative;
+      transition: width 0.1s ease-out;
+      margin: 0 auto;
+      max-width: 100%;
+    }
+
+    .container-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.75rem;
+    }
+
+    .container-tag {
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: var(--accent-neon);
+      background-color: rgba(0, 242, 254, 0.08);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .width-indicator {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* Component Base Styling */
+    .product-card {
+      background-color: #0f1420;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .card-image-box {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      background: radial-gradient(circle at center, #2e1065, #0f172a);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-image-box img {
+      max-width: 80%;
+      max-height: 80%;
+      object-fit: contain;
+      filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5));
+    }
+
+    .discount-tag {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: var(--accent-pink);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .card-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .category {
+      color: var(--accent-neon);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .product-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .product-desc {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: none; /* Hidden on tiny containers */
+    }
+
+    .rating {
+      color: #fbbf24;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.5rem;
+    }
+
+    .price-group {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .current-price {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+
+    .old-price {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .btn-buy {
+      background: linear-gradient(135deg, var(--accent-purple), #4f46e5);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* ------------------------------------------------ */
+    /* CSS CONTAINER QUERIES (The Core Magic!)         */
+    /* ------------------------------------------------ */
+
+    /* Medium Container layout (> 450px) */
+    @container product-container (min-width: 450px) {
+      .product-desc {
+        display: block;
+      }
+      .product-title {
+        font-size: 1.4rem;
+      }
+    }
+
+    /* Large Container layout (> 650px) - Changes to Horizontal Flex */
+    @container product-container (min-width: 650px) {
+      .product-card {
+        flex-direction: row;
+        align-items: center;
+        padding: 1.25rem;
+      }
+
+      .card-image-box {
+        width: 260px;
+        height: 200px;
+        flex-shrink: 0;
+      }
+
+      .card-content {
+        flex-grow: 1;
+        justify-content: center;
+      }
+
+      .product-title {
+        font-size: 1.6rem;
+      }
+    }
+
+    /* CSS Code Inspector Box */
+    .code-box {
+      background-color: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: #e6edf3;
+      overflow-x: auto;
+    }
+
+    .code-keyword { color: #ff7b72; }
+    .code-property { color: #79c0ff; }
+    .code-value { color: #a5d6ff; }
+    .code-selector { color: #ffa657; }
+  </style>
 </head>
 <body>
-    <p>Resize container horizontally to test query:</p>
-    <div class="container">
-        <div class="card">
-            <h3>Sanctify Component</h3>
-            <p>Adapts based on parent size!</p>
-        </div>
+
+  <div class="wrapper">
+    
+    <!-- Header -->
+    <header>
+      <div>
+        <span class="badge">CSS Practical Demo</span>
+        <h1 class="title">Container Queries</h1>
+        <p class="subtitle">
+          Components that adapt dynamically based on the width of their parent container—not the browser viewport! Drag the slider below to test live responsiveness.
+        </p>
+      </div>
+      <div class="hero-cq-badge">CQ</div>
+    </header>
+
+    <!-- Interactive Control Bar -->
+    <div class="controls-bar">
+      <div class="preset-buttons">
+        <button class="btn" onclick="setContainerWidth('350px')">Small (350px)</button>
+        <button class="btn" onclick="setContainerWidth('520px')">Medium (520px)</button>
+        <button class="btn active" onclick="setContainerWidth('780px')">Large (780px)</button>
+      </div>
+
+      <div class="slider-container">
+        <span>Resize:</span>
+        <input type="range" id="widthSlider" min="300" max="950" value="780" oninput="updateWidth(this.value)">
+        <span id="sliderValue">780px</span>
+      </div>
     </div>
+
+    <!-- Live Container Query Showcase -->
+    <div class="playground-grid">
+      
+      <div class="resizable-wrapper" id="containerBox" style="width: 780px;">
+        <div class="container-header">
+          <span class="container-tag">@container (product-container)</span>
+          <span class="width-indicator" id="liveWidthText">Current Width: 780px</span>
+        </div>
+
+        <!-- Adaptive Product Card Component -->
+        <div class="product-card">
+          <div class="card-image-box">
+            <span class="discount-tag">30% OFF</span>
+            <img src="https://pngimg.com/uploads/running_shoes/running_shoes_PNG5823.png" alt="Running Shoe">
+          </div>
+
+          <div class="card-content">
+            <span class="category">Sports / Footwear</span>
+            <h2 class="product-title">Urban Speed Running Shoes</h2>
+            <p class="product-desc">
+              Lightweight performance running shoes engineered with ultra-responsive cushioning for everyday workouts and road activities.
+            </p>
+            <div class="rating">
+              <i data-lucide="star" style="width:14px; height:14px; fill:#fbbf24;"></i>
+              <span>4.8 (142 reviews)</span>
+            </div>
+            
+            <div class="card-footer">
+              <div class="price-group">
+                <span class="current-price">$129.99</span>
+                <span class="old-price">$185.00</span>
+              </div>
+              <button class="btn-buy">Buy Now</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Live CSS Code snippet explanation -->
+    <div class="code-box">
+      <pre><code><span class="code-comment">/* 1. Define Container Context on Parent Element */</span>
+<span class="code-selector">.resizable-wrapper</span> {
+  <span class="code-property">container-type</span>: <span class="code-value">inline-size</span>;
+  <span class="code-property">container-name</span>: <span class="code-value">product-container</span>;
+}
+
+<span class="code-comment">/* 2. Component Adapts Automatically via Container Queries */</span>
+<span class="code-keyword">@container</span> product-container (<span class="code-property">min-width</span>: <span class="code-value">650px</span>) {
+  <span class="code-selector">.product-card</span> {
+    <span class="code-property">flex-direction</span>: <span class="code-value">row</span>; <span class="code-comment">/* Switches from vertical stack to side-by-side! */</span>
+  }
+}</code></pre>
+    </div>
+
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const containerBox = document.getElementById('containerBox');
+    const widthSlider = document.getElementById('widthSlider');
+    const sliderValue = document.getElementById('sliderValue');
+    const liveWidthText = document.getElementById('liveWidthText');
+
+    function updateWidth(val) {
+      containerBox.style.width = val + 'px';
+      sliderValue.innerText = val + 'px';
+      liveWidthText.innerText = 'Current Width: ' + val + 'px';
+    }
+
+    function setContainerWidth(widthStr) {
+      const numVal = parseInt(widthStr);
+      widthSlider.value = numVal;
+      updateWidth(numVal);
+      
+      // Update active button state
+      document.querySelectorAll('.preset-buttons .btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.includes(numVal + 'px')) {
+          btn.classList.add('active');
+        }
+      });
+    }
+  </script>
 </body>
 </html>
